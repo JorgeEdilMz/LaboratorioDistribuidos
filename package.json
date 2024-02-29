@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start":"node ./src/index.js",
+    "start": "node ./src/index.js",
     "dev": "nodemon src/index.js"
   },
   "keywords": [],
@@ -19,7 +19,7 @@
     "azure-storage": "^2.10.7",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
+    "express": "^4.18.3",
     "express-jwt": "^8.4.1",
     "into-stream": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
