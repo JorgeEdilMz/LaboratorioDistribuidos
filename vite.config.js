@@ -6,7 +6,8 @@ export default defineConfig({
     vue(),
   ],
   server: {
-    port: 5173, // Cambia este valor al puerto deseado
+    port: '5173',
+    host: '0.0.0.0',
   },
   resolve: {
     alias: {
