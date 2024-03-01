@@ -11,7 +11,7 @@ class UploadService {
         const formData = new FormData();
         formData.append('image', image);
         try {
-            const response = await axios.post(`https://api-usuarios-8o5p.onrender.com/api/upload/${userId}`, formData, {
+            const response = await axios.post(`http://159.54.140.202:3001/api/upload/${userId}`, formData, {
                 headers: {
                     'Content-Type': 'Application/json',
                     'Authorization': `${token}`,
