@@ -2,7 +2,7 @@ export default class UserCrudService {
 
     constructor(entity) {
         this.entity = entity
-        this.url = `https://api-usuarios-8o5p.onrender.com/api/${this.entity}`;
+        this.url = `http://159.54.140.202:3000/api/${this.entity}`;
     }
 
 }
