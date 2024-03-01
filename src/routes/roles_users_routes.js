@@ -198,7 +198,7 @@ router.post('/connection', auth.authenticateToken, async (req, res) => {
 
 router.post('/connection/post', async (req, res) => {
     try {
-        const { id_usuario, id_rol, nick_usuario, password_usuario } = req.body;
+        const { id_usuario,nick_usuario, password_usuario } = req.body;
 
         // Genera un hash de la contraseña
         const hashedPassword = await bcrypt.hash(password_usuario, 10); // "10" es el costo de la encriptación
@@ -207,7 +207,7 @@ router.post('/connection/post', async (req, res) => {
         const newConnection = await orm.usuarios_roles.create({
             data: {
                 id_usuario,
-                id_rol,
+                id_rol:3,
                 nick_usuario,
                 password_usuario: hashedPassword// Almacena el hash en la base de datos
             }
@@ -220,7 +220,7 @@ router.post('/connection/post', async (req, res) => {
     }
 });
 
-router.post('/connection/admin', async (req, res) => {
+router.post('/connection/admin', auth.authenticateToken, async (req, res) => {
     try {
         const { id_usuario, id_rol, nick_usuario, password_usuario } = req.body;
 
@@ -262,9 +262,7 @@ router.post('/login', async (req, res) => {
         } else {
             if (nombre_usuario === logueo.nick_usuario) {//Validar mayusculas y minusculas
                 // Compara el hash de la contraseña ingresada con el hash almacenado
-                const passwordMatch = await bcrypt.compare(password_usuario, logueo.password_usuario);
-
-                if (passwordMatch) {
+                if (password_usuario == logueo.password_usuario){
                     //aqui token
                     const token = auth.generateToken({
                         nick_usuario: logueo.nick_usuario,
