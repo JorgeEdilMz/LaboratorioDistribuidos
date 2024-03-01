@@ -23,13 +23,6 @@ function startServer(port) {
   });
 }
 
-startServer(currentPort);
-currentPort++;
-
-app.use((req, res, next) => {
-  res.status(404).send('Not Found');
-});
-
 while (currentPort < PORT_START + 3) {
   try {
     startServer(currentPort);
@@ -43,4 +36,3 @@ while (currentPort < PORT_START + 3) {
 if (currentPort === PORT_START + 3) {
   console.error('All ports in use.');
 }
-
