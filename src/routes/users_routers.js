@@ -65,7 +65,7 @@ router.post('/upload/:documento_usuario', uploadStrategy, async (req, res) => {
 const elementosPorPagin = 20; // Cambia esto según tus necesidades
 const paginaPredeterminada = 1; // Página inicial
 
-router.get('/users/count', auth.authenticateToken, async (req, res) => {
+router.get('/users/count', async (req, res) => {
     try {
         const number = await orm.usuarios.count({})
         if (number != 0) {
@@ -81,7 +81,7 @@ router.get('/users/count', auth.authenticateToken, async (req, res) => {
 
 
 
-router.get('/users', auth.authenticateToken, async (req, res) => {
+router.get('/users', async (req, res) => {
     try {
         const { pagina = paginaPredeterminada, elementos = elementosPorPagin } = req.query;
         const paginaActual = parseInt(pagina);
@@ -112,7 +112,7 @@ router.get('/users', auth.authenticateToken, async (req, res) => {
     }
 });
 
-router.get('/users/:id', auth.authenticateToken, async (req, res) => {
+router.get('/users/:id', async (req, res) => {
     try {
 
         const foundUser = await orm.usuarios.findFirst({
@@ -294,21 +294,21 @@ async function updateUserInDatabase(document, updates) {
 router.get('/users/email/superadmin', async (req, res) => {
     try {
         const users = await orm.usuarios.findMany({
-            include:{
-                usuarios_roles:true
+            include: {
+                usuarios_roles: true
             },
-            where:{
-                usuarios_roles:{
+            where: {
+                usuarios_roles: {
                     some: {
                         id_rol: 2 // Reemplaza 'tuID' con el ID que estás buscando superadmin(2)
                     }
                 }
             }
-            
+
         });
 
         const direcciones = users.map(user => user.direccion_usuario);
-        
+
         res.json(direcciones);
 
     } catch (error) {
@@ -321,14 +321,11 @@ router.get('/users/email/superadmin', async (req, res) => {
 
 router.get('/users/email/date', async (req, res) => {
     try {
-        const fecha = await orm.fechas.findFirst({
-            
-            select:{
-                fecha_consulta:true
-            }
-        });
+        const fecha = new Date();
+        const fechaISO = fecha.toISOString();
+        const fechaSinHora = fechaISO.split('T')[0];
 
-        res.json(fecha);
+        res.json({ fecha: fechaSinHora });
 
     } catch (error) {
         console.error("Error in date", error);
@@ -336,20 +333,22 @@ router.get('/users/email/date', async (req, res) => {
     }
 });
 
+
+
 //obtiene los usuarios creados en una fecha especifica
 router.get('/users/email/created/:date', async (req, res) => {
     try {
         const date = new Date(req.params.date)
 
         const usersCreated = await orm.usuarios.findMany({
-            where:{
-                fecha_registro_usuario : date
+            where: {
+                fecha_registro_usuario: date
             }
-            
+
         });
 
-        
-        
+
+
         res.json(usersCreated);
 
     } catch (error) {

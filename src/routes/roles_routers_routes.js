@@ -1,19 +1,62 @@
 import { Router } from "express";
-import {orm} from "../db.js"
+import { orm } from "../db.js"
 import * as auth from '../authToken.js';
 
 const router = Router();
+
+import redis from 'redis';
+
+const cachePass = "3SWLQcIYw64HPm3z3o6ZuoX8rMpeZ1qF3AzCaJYrIlk=";
+const cacheHost = "rolesCache.redis.cache.windows.net";
+var cacheConnection = ""
+try{
+    cacheConnection = redis.createClient({
+        url: `rediss://${cacheHost}:6380`,
+        password: cachePass
+    });
     
+    await cacheConnection.connect();
+    
+    console.log("Cache response : " + await cacheConnection.ping());
+}catch (error){
+    console.error("Cache response : Not Response - Please Check connections");
+}
+
+
+
+
+
+const redisSet = async ({ body }) => {
+    // Almacenar el cuerpo de la solicitud (que es un array de objetos JSON) en Redis 2 minutos de vida
+    await cacheConnection.setEx('roles', 120, JSON.stringify(body));
+}
+
 
 router.get('/roles', auth.authenticateToken, async (req, res) => {
     try {
-        // Intenta obtener los roles de la base de datos
-        const roles = await orm.roles.findMany();
+        var cachedRoles = ""
+        // Intenta obtener los roles de Redis
+        if(cacheConnection!=""){
+            cachedRoles = await cacheConnection.get('roles');
+        }
+        
 
-        if (roles.length !== 0) {
+        let roles;
+        if (cachedRoles) {
+            // Si los roles están en Redis, usa esos
+            roles = JSON.parse(cachedRoles);
+        } else {
+            // Si no, obtén los roles de la base de datos y almacénalos en Redis
+            roles = await orm.roles.findMany();
+            if(cacheConnection!=""){
+                redisSet({ body: roles });
+            }
+        }
+
+        if (roles.length != 0) {
             res.json(roles);
         } else {
-            res.status(204).json({ info: "No content" });
+            res.status(204).json({ info: "Not content" });
         }
     } catch (error) {
         console.error("Error fetching roles:", error);
@@ -21,11 +64,34 @@ router.get('/roles', auth.authenticateToken, async (req, res) => {
     }
 });
 
+router.patch('/roles/:id/', auth.authenticateToken, async (req, res) => {
+    const { nombre_rol, estado_rol, descripcion_rol } = req.body;
+    const roleId = parseInt(req.params.id);
+
+    try {
+        const updatedRole = await orm.roles.update({
+            where: { id_rol: roleId },
+            data: {
+                nombre_rol: nombre_rol,
+                estado_rol: estado_rol,
+                descripcion_rol: descripcion_rol
+            }
+        });
+
+        if (!updatedRole) {
+            return res.status(404).json({ error: "Role not found" });
+        }
+
+        return res.status(200).json({ message: "Modified successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
 
 
-
-router.get('/roles/:id',auth.authenticateToken, async (req, res) => {
+router.get('/roles/:id', auth.authenticateToken, async (req, res) => {
     try {
         const foundRol = await orm.roles.findFirst({
             where: {
@@ -44,7 +110,7 @@ router.get('/roles/:id',auth.authenticateToken, async (req, res) => {
     }
 });
 
-router.delete('/roles/:id',auth.authenticateToken,async (req, res) => {
+router.delete('/roles/:id', auth.authenticateToken, async (req, res) => {
     try {
 
         // Elimina el rol por su el ID_ROL proporcionado en la ruta
@@ -67,9 +133,7 @@ router.delete('/roles/:id',auth.authenticateToken,async (req, res) => {
 
 
 
-
-
-router.put('/roles/:id',auth.authenticateToken, async (req, res) => {
+router.put('/roles/:id', auth.authenticateToken, async (req, res) => {
     try {
         const RolUpdate = await orm.roles.update({
             where: {
@@ -89,13 +153,13 @@ router.put('/roles/:id',auth.authenticateToken, async (req, res) => {
     }
 });
 
-router.post('/roles',auth.authenticateToken, async (req, res) => {
+router.post('/roles', auth.authenticateToken, async (req, res) => {
     try {
-       
+
         const newConnection = await orm.roles.create({
             data: req.body
         });
-        
+
         res.status(200).json({ info: "Rol created!" });
     } catch (error) {
         console.error("Error creating Rol:", error);
