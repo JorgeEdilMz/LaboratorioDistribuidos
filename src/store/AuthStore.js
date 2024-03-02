@@ -64,16 +64,18 @@ export const useAuthStore = defineStore('auth', {
             this.showUserRegister = false
         },
         isUserAdmin() {
+            console.log(this.onlineUser)
             if (!this.onlineUser.rol) {
                 return false
             }
-            return this.onlineUser.rol === 'Administrador'
+            return this.onlineUser.rol === 'admin'
         },
         isSuperAdmin() {
+            console.log(this.onlineUser)
             if (!this.onlineUser.rol) {
                 return false
             }
-            return this.onlineUser.rol === 'SuperAdministrador'
+            return this.onlineUser.rol === 'superUser'
         }
     },
     persist: {
