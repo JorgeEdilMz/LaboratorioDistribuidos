@@ -19,6 +19,6 @@ spec:
     spec:
       containers:
       - name: backend-container
-        image: proyecto
+        image: jorgeedilmz/proyecto:latest
         ports:
         - containerPort: 3001
