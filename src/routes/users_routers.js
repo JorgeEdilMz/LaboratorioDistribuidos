@@ -3,12 +3,9 @@ import { orm } from "../db.js"
 import * as auth from '../authToken.js';
 
 import multer from 'multer';
-import azureStorage from 'azure-storage';
-import getStream from 'into-stream';
 
 const inMemoryStorage = multer.memoryStorage();
 const uploadStrategy = multer({ storage: inMemoryStorage }).single('image');
-const blobService = azureStorage.createBlobService();
 const containerName = 'imagenes';
 
 const getBlobName = originalName => {
@@ -17,49 +14,6 @@ const getBlobName = originalName => {
 };
 
 const router = Router();
-
-router.post('/upload/:documento_usuario', uploadStrategy, async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        const blobName = getBlobName(req.file.originalname);
-        const stream = getStream(req.file.buffer);
-
-        // Sube la imagen al contenedor en Azure Blob Storage
-        blobService.createBlockBlobFromStream(containerName, blobName, stream, req.file.size, async (error, result, response) => {
-            if (error) {
-                console.error('Error uploading image to Azure Blob Storage:', error);
-                return res.status(500).json({ error: 'Internal server error' });
-            }
-
-            // URL de acceso a la imagen recién cargada
-            const imageUrl = blobService.getUrl(containerName, blobName);
-            const userId = parseInt(req.params.documento_usuario);
-            try {
-                const updatedUser = await orm.usuarios.update({
-                    where: { documento_usuario: userId },
-                    data: {
-                        foto_usuario: imageUrl
-                    }
-                });
-
-                if (updatedUser) {
-                    res.status(200).json({ Message: 'Imagen subida con éxito' });
-                } else {
-                    res.status(404).json({ error: 'User not found' });
-                }
-            } catch (updateError) {
-                console.error('Error updating user:', updateError);
-                res.status(500).json({ error: 'Internal server error' });
-            }
-        });
-    } catch (error) {
-        console.error('Error uploading image:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 
 
 const elementosPorPagin = 20; // Cambia esto según tus necesidades
