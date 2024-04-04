@@ -6,8 +6,9 @@ spec:
   type: LoadBalancer
   ports:
     - protocol: TCP
-      port: 80  
+      port: 80
       targetPort: 3001
       name: http
-    selector:
-      role: backend  
+  selector: 
+    role: backend 
+
